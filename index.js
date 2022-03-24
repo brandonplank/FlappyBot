@@ -49,6 +49,9 @@ client.on("messageCreate", function(message) {
         }, function (error, response, body) {
             if (isJson(body)) {
                 const jsonBody = JSON.parse(body)
+                if (error || response.statusCode != 200) {
+                    return message.reply(jsonBody.message)
+                }
                 const user = new MessageEmbed()
                     .setColor('#0099ff')
                     .setTitle(jsonBody.name)
@@ -74,21 +77,18 @@ client.on("messageCreate", function(message) {
                     )
                     .setTimestamp()
                     .setFooter({ text: "FlappyBot", iconURL: 'https://flappybird.brandonplank.org/images/favicon.png'});
-                message.reply({embeds: [user]})
-                return
+                return message.reply({embeds: [user]})
             }
-            message.reply(body)
+            return message.reply(body)
         })
     }
 
     if(command === "ban") {
         if(!isAdmin(message)) {
-            message.reply("You do not have permission to use this command")
-            return
+            return message.reply("You do not have permission to use this command")
         }
         if(args.length < 2) {
-            message.reply("This command takes in 2 argumants\nUSAGE !ban <userid> <reason>")
-            return
+            return message.reply("This command takes in 2 argumants\nUSAGE !ban <userid> <reason>")
         }
         var reason = ""
         for(var i = 1; i < args.length; i++) {
@@ -100,8 +100,7 @@ client.on("messageCreate", function(message) {
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
-                message.reply(jsonBody.message)
-                return
+                return message.reply(jsonBody.message)
             }
             message.reply(body)
         })
@@ -109,12 +108,10 @@ client.on("messageCreate", function(message) {
 
     if(command === "unban") {
         if(!isAdmin(message)) {
-            message.reply("You do not have permission to use this command")
-            return
+            return message.reply("You do not have permission to use this command")
         }
         if(args.length != 1) {
-            message.reply("This command takes in 1 argumant\nUSAGE !unban <userid>")
-            return
+            return message.reply("This command takes in 1 argumant\nUSAGE !unban <userid>")
         }
         request.get({
             url: `${baseURL}/v1/auth/unban/${args[0]}`,
@@ -122,21 +119,18 @@ client.on("messageCreate", function(message) {
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
-                message.reply(jsonBody.message)
-                return
+                return message.reply(jsonBody.message)
             }
-            message.reply(body)
+            return message.reply(body)
         })
     }
 
     if(command === "restorescore") {
         if(!isAdmin(message)) {
-            message.reply("You do not have permission to use this command")
-            return
+            return message.reply("You do not have permission to use this command")
         }
         if(args.length != 2) {
-            message.reply("This command takes in 2 argumants\nUSAGE !restorescore <userid> <score>")
-            return
+            return message.reply("This command takes in 2 argumants\nUSAGE !restorescore <userid> <score>")
         }
         request.get({
             url: `${baseURL}/v1/auth/restoreScore/${args[0]}/${args[1]}`,
@@ -144,10 +138,9 @@ client.on("messageCreate", function(message) {
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
-                message.reply(jsonBody.message)
-                return
+                return message.reply(jsonBody.message)
             }
-            message.reply(body)
+            return message.reply(body)
         })
     }
 
