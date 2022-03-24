@@ -1,8 +1,9 @@
 const Discord = require("discord.js");
+const { MessageEmbed } = require('discord.js');
 const config = require("./config.json");
 var request = require('request');
 
-const baseURL = "https://flappybird.brandonplank.org/v1"
+const baseURL = "https://flappybird.brandonplank.org"
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
 
@@ -23,10 +24,57 @@ client.on("messageCreate", function(message) {
             message.reply("This command takes in 1 argumant\nUSAGE !getid <userid>")
             return
         }
-        request.get({url: `${baseURL}/getID/${args[0]}`}, function(error, response, body){
+        request.get({url: `${baseURL}/v1/getID/${args[0]}`}, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
                 message.reply(jsonBody.message)
+                return
+            }
+            message.reply(body)
+        })
+    }
+
+    if(command === "user") {
+        if (!isAdmin(message)) {
+            message.reply("You do not have permission to use this command")
+            return
+        }
+        if (args.length != 1) {
+            message.reply("This command takes in 1 argumant\nUSAGE !user <userid>")
+            return
+        }
+        request.get({
+            url: `${baseURL}/v1/user/${args[0]}`,
+            headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
+        }, function (error, response, body) {
+            if (isJson(body)) {
+                const jsonBody = JSON.parse(body)
+                const user = new MessageEmbed()
+                    .setColor('#0099ff')
+                    .setTitle(jsonBody.name)
+                    .setDescription('User statistics')
+                    .setThumbnail('https://flappybird.brandonplank.org/images/favicon.png')
+                    .addFields(
+                        {
+                            name: 'Score',
+                            value: `${jsonBody.score}`
+                        },
+                        {
+                            name: 'Deaths',
+                            value: `${jsonBody.deaths}`
+                        },
+                        {
+                            name: 'Banned',
+                            value: `${jsonBody.isBanned}`
+                        },
+                        {
+                            name: 'ID',
+                            value: `${jsonBody.id}`
+                        },
+                    )
+                    .setTimestamp()
+                    .setFooter({ text: "FlappyBot", iconURL: 'https://flappybird.brandonplank.org/images/favicon.png'});
+                message.reply({embeds: [user]})
                 return
             }
             message.reply(body)
@@ -47,7 +95,7 @@ client.on("messageCreate", function(message) {
             reason += `${args[i]} `
         }
         request.get({
-            url: `${baseURL}/auth/ban/${args[0]}/${encodeURIComponent(reason)}`,
+            url: `${baseURL}/v1/auth/ban/${args[0]}/${encodeURIComponent(reason)}`,
             headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
         }, function(error, response, body){
             if(isJson(body)) {
@@ -69,7 +117,7 @@ client.on("messageCreate", function(message) {
             return
         }
         request.get({
-            url: `${baseURL}/auth/unban/${args[0]}`,
+            url: `${baseURL}/v1/auth/unban/${args[0]}`,
             headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
         }, function(error, response, body){
             if(isJson(body)) {
@@ -91,7 +139,7 @@ client.on("messageCreate", function(message) {
             return
         }
         request.get({
-            url: `${baseURL}/auth/restoreScore/${args[0]}/${args[1]}`,
+            url: `${baseURL}/v1/auth/restoreScore/${args[0]}/${args[1]}`,
             headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
         }, function(error, response, body){
             if(isJson(body)) {
