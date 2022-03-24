@@ -21,27 +21,23 @@ client.on("messageCreate", function(message) {
 
     if(command === "getid") {
         if(args.length != 1) {
-            message.reply("This command takes in 1 argumant\nUSAGE !getid <userid>")
-            return
+            return message.reply("This command takes in 1 argumant\nUSAGE !getid <userid>")
         }
         request.get({url: `${baseURL}/v1/getID/${args[0]}`}, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
-                message.reply(jsonBody.message)
-                return
+                return message.reply(jsonBody.message)
             }
-            message.reply(body)
+            return message.reply(body)
         })
     }
 
     if(command === "user") {
         if (!isAdmin(message)) {
-            message.reply("You do not have permission to use this command")
-            return
+            return message.reply("You do not have permission to use this command")
         }
         if (args.length != 1) {
-            message.reply("This command takes in 1 argumant\nUSAGE !user <userid>")
-            return
+            return message.reply("This command takes in 1 argumant\nUSAGE !user <userid>")
         }
         request.get({
             url: `${baseURL}/v1/user/${args[0]}`,
