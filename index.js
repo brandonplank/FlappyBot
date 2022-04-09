@@ -3,12 +3,31 @@ const { MessageEmbed } = require('discord.js');
 const config = require("./config.json");
 var request = require('request');
 
+token = process.env.BOT_TOKEN
+username = process.env.BOT_USERNAME
+password = process.env.BOT_PASSWORD
+
+if(token.length < 1) {
+    console.error("You need a token")
+    process.exit(-1)
+}
+
+if(username.length < 1) {
+    console.error("You need a username")
+    process.exit(-1)
+}
+
+if(password.length < 1) {
+    console.error("You need a password")
+    process.exit(-1)
+}
+
 const baseURL = "https://flappybird.brandonplank.org"
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
 
 console.log("Bot is logging in")
-client.login(config.BOT_TOKEN);
+client.login(token);
 
 const prefix = "!";
 client.on("messageCreate", function(message) {
@@ -41,7 +60,7 @@ client.on("messageCreate", function(message) {
         }
         request.get({
             url: `${baseURL}/v1/user/${args[0]}`,
-            headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
+            headers: {"Authorization": craftAuthHeader(username, password)}
         }, function (error, response, body) {
             if (isJson(body)) {
                 const jsonBody = JSON.parse(body)
@@ -92,7 +111,7 @@ client.on("messageCreate", function(message) {
         }
         request.get({
             url: `${baseURL}/v1/auth/ban/${args[0]}/${encodeURIComponent(reason)}`,
-            headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
+            headers: {"Authorization": craftAuthHeader(username, password)}
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
@@ -111,7 +130,7 @@ client.on("messageCreate", function(message) {
         }
         request.get({
             url: `${baseURL}/v1/auth/unban/${args[0]}`,
-            headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
+            headers: {"Authorization": craftAuthHeader(username, password)}
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
@@ -130,7 +149,7 @@ client.on("messageCreate", function(message) {
         }
         request.get({
             url: `${baseURL}/v1/auth/restoreScore/${args[0]}/${args[1]}`,
-            headers: {"Authorization": craftAuthHeader(config.BOT_USERNAME, config.BOT_PASSWORD)}
+            headers: {"Authorization": craftAuthHeader(username, password)}
         }, function(error, response, body){
             if(isJson(body)) {
                 const jsonBody = JSON.parse(body)
