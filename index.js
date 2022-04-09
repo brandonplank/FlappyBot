@@ -1,32 +1,30 @@
-const Discord = require("discord.js");
+const Discord = require('discord.js');
+let auth = require('./local').token()
+const { Client, Collection, Intents } = require('discord.js');
 const { MessageEmbed } = require('discord.js');
+const deploy = require('./deploy-commands.js');
 var request = require('request');
+const cfg = require("./local")
 
-token = process.env.BOT_TOKEN
-username = process.env.BOT_USERNAME
-password = process.env.BOT_PASSWORD
+const client = new Discord.Client({
+    intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_PRESENCES, Discord.Intents.FLAGS.GUILD_MEMBERS]
+});
 
-if(token.length < 1) {
-    console.error("You need a token")
-    process.exit(-1)
+client.commands = new Collection();
+const fs = require('node:fs');
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    // Set a new item in the Collection
+    // With the key as the command name and the value as the exported module
+    client.commands.set(command.data.name, command);
+    console.log("Registered Command: ", command.data.name);
 }
 
-if(username.length < 1) {
-    console.error("You need a username")
-    process.exit(-1)
-}
-
-if(password.length < 1) {
-    console.error("You need a password")
-    process.exit(-1)
-}
-
-const baseURL = "https://flappybird.brandonplank.org"
-
-const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
+global.baseURL = "https://flappybird.brandonplank.org";
 
 console.log("Bot is logging in")
-client.login(token);
+client.login(auth);
 
 const prefix = "!";
 client.on("messageCreate", function(message) {
@@ -36,108 +34,6 @@ client.on("messageCreate", function(message) {
     const commandBody = message.content.slice(prefix.length)
     const args = commandBody.split(' ')
     const command = args.shift().toLowerCase()
-
-    if(command === "getid") {
-        if(args.length != 1) {
-            return message.reply("This command takes in 1 argumant\nUSAGE !getid <userid>")
-        }
-        request.get({url: `${baseURL}/v1/getID/${args[0]}`}, function(error, response, body){
-            if(isJson(body)) {
-                const jsonBody = JSON.parse(body)
-                return message.reply(jsonBody.message)
-            }
-            return message.reply(body)
-        })
-    }
-
-    if(command === "user") {
-        if (!isAdmin(message)) {
-            return message.reply("You do not have permission to use this command")
-        }
-        if (args.length != 1) {
-            return message.reply("This command takes in 1 argumant\nUSAGE !user <userid>")
-        }
-        request.get({
-            url: `${baseURL}/v1/user/${args[0]}`,
-            headers: {"Authorization": craftAuthHeader(username, password)}
-        }, function (error, response, body) {
-            if (isJson(body)) {
-                const jsonBody = JSON.parse(body)
-                if (error || response.statusCode != 200) {
-                    return message.reply(jsonBody.message)
-                }
-                const user = new MessageEmbed()
-                    .setColor('#0099ff')
-                    .setTitle(jsonBody.name)
-                    .setDescription('User statistics')
-                    .setThumbnail('https://flappybird.brandonplank.org/images/favicon.png')
-                    .addFields(
-                        {
-                            name: 'Score',
-                            value: `${jsonBody.score}`
-                        },
-                        {
-                            name: 'Deaths',
-                            value: `${jsonBody.deaths}`
-                        },
-                        {
-                            name: 'Banned',
-                            value: `${jsonBody.isBanned}`
-                        },
-                        {
-                            name: 'ID',
-                            value: `${jsonBody.id}`
-                        },
-                    )
-                    .setTimestamp()
-                    .setFooter({ text: "FlappyBot", iconURL: 'https://flappybird.brandonplank.org/images/favicon.png'});
-                return message.reply({embeds: [user]})
-            }
-            return message.reply(body)
-        })
-    }
-
-    if(command === "ban") {
-        if(!isAdmin(message)) {
-            return message.reply("You do not have permission to use this command")
-        }
-        if(args.length < 2) {
-            return message.reply("This command takes in 2 argumants\nUSAGE !ban <userid> <reason>")
-        }
-        var reason = ""
-        for(var i = 1; i < args.length; i++) {
-            reason += `${args[i]} `
-        }
-        request.get({
-            url: `${baseURL}/v1/auth/ban/${args[0]}/${encodeURIComponent(reason)}`,
-            headers: {"Authorization": craftAuthHeader(username, password)}
-        }, function(error, response, body){
-            if(isJson(body)) {
-                const jsonBody = JSON.parse(body)
-                return message.reply(jsonBody.message)
-            }
-            message.reply(body)
-        })
-    }
-
-    if(command === "unban") {
-        if(!isAdmin(message)) {
-            return message.reply("You do not have permission to use this command")
-        }
-        if(args.length != 1) {
-            return message.reply("This command takes in 1 argumant\nUSAGE !unban <userid>")
-        }
-        request.get({
-            url: `${baseURL}/v1/auth/unban/${args[0]}`,
-            headers: {"Authorization": craftAuthHeader(username, password)}
-        }, function(error, response, body){
-            if(isJson(body)) {
-                const jsonBody = JSON.parse(body)
-                return message.reply(jsonBody.message)
-            }
-            return message.reply(body)
-        })
-    }
 
     if(command === "restorescore") {
         if(!isAdmin(message)) {
@@ -169,20 +65,44 @@ client.on("messageCreate", function(message) {
 
 });
 
-function isAdmin(message) {
-    return message.member.roles.cache.find(r => r.id === "954092482243727391")
-}
-
-function craftAuthHeader(username, password) {
-    const str = `${username}:${password}`
-    return `Basic ${btoa(str)}`
-}
-
-function isJson(str) {
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
     try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
-    return true;
+});
+
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isSelectMenu()) return;
+    const iAction = client.interactions.get(interaction.customId);
+    if (!iAction) return;
+    try {
+        await iAction.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        await iAction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
+});
+
+global.Bird = {
+    isJson: function (str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    },
+    isAdmin: function (message) {
+        return message.member.roles.cache.find(r => r.id === "954092482243727391")
+    },
+    craftAuthHeader: function (username, password) {
+        const str = `${username}:${password}`
+        return `Basic ${btoa(str)}`
+    }
 }
