@@ -1,6 +1,5 @@
 const Discord = require("discord.js");
 const { MessageEmbed } = require('discord.js');
-const config = require("./config.json");
 var request = require('request');
 
 token = process.env.BOT_TOKEN
