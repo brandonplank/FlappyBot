@@ -5,8 +5,9 @@ const { MessageEmbed } = require('discord.js');
 const deploy = require('./deploy-commands.js');
 var request = require('request');
 const cfg = require("./local")
+const axios = require('axios')
 
-const client = new Discord.Client({
+global.client = new Discord.Client({
     intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_PRESENCES, Discord.Intents.FLAGS.GUILD_MEMBERS]
 });
 
@@ -88,6 +89,22 @@ client.on('interactionCreate', async interaction => {
         await iAction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
 });
+
+global.editInteraction = async (interaction, response) => {
+    // Set the data as embed if reponse is an embed object else as content
+    const data = typeof response === 'object' ? { embeds: [ response ] } : { content: response };
+    // Get the channel object by channel id:
+    const channel = await client.channels.resolve(interaction.channel_id);
+    // Edit the original interaction response:
+    return axios
+        .patch(`https://discord.com/api/v8/webhooks/${cfg.clientId()}/${interaction.token}/messages/@original`, data)
+        .then((answer) => {
+            try {
+                channel.messages.fetch(answer.data.id)
+            } catch (e) {
+            }
+        })
+};
 
 global.Bird = {
     isJson: function (str) {

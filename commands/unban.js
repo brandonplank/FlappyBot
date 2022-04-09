@@ -15,7 +15,15 @@ module.exports = {
             url: `${baseURL}/v1/auth/unban/${id}`,
             headers: {"Authorization": Bird.craftAuthHeader(cfg.botUsername(), cfg.botPassword())}
         }, function(error, response, body){
+            if(Bird.isJson(body)) {
+                var j = JSON.parse(body)
+                global.editInteraction(interaction, j.message)
+            }
         })
-        interaction.reply("Waiting for API..")
+        client.api.interactions(interaction.id, interaction.token).callback.post({
+            data: {
+                type: 5,
+            },
+        })
     },
 };
