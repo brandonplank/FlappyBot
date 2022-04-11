@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 let auth = require('./local').token()
-const { Client, Collection, Intents } = require('discord.js');
+const { Client, Collection, Intents, GuildMember} = require('discord.js');
 const { MessageEmbed } = require('discord.js');
 const deploy = require('./deploy-commands.js');
 var request = require('request');
@@ -115,10 +115,9 @@ global.Bird = {
         }
         return true;
     },
-    isAdmin: function (message) {
-        let ownerRole = message.guild.roles.find("name", "Owner");
-        let adminRole = message.guild.roles.find("name", "Admin");
-        return message.member.roles.has(ownerRole) || message.member.roles.has(adminRole)
+    isAdmin: function (interaction) {
+        const member = interaction.member;
+        return member.roles.cache.some(role => role.name === 'Admin' || role.name === 'Owner');
     },
     craftAuthHeader: function (username, password) {
         const str = `${username}:${password}`
