@@ -9,7 +9,7 @@ module.exports = {
         .addIntegerOption(option => option.setName('score').setDescription('Integer for new score').setRequired(true)),
     async execute(interaction) {
         if(!Bird.isAdmin(interaction)) {
-            interaction.reply("You do not have the correct permissions for this command")
+            return interaction.reply("You do not have the correct permissions for this command")
         }
         const id = interaction.options.getString(`userid`) || null;
         const score = interaction.options.getInteger(`score`) || null;

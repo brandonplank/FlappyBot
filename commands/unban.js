@@ -8,7 +8,7 @@ module.exports = {
         .addStringOption(option => option.setName('userid').setDescription('ID of the user').setRequired(true)),
     async execute(interaction) {
         if(!Bird.isAdmin(interaction)) {
-            interaction.reply("You do not have the correct permissions for this command")
+            return interaction.reply("You do not have the correct permissions for this command")
         }
         const id = interaction.options.getString(`userid`) || null;
         request.get({

@@ -116,7 +116,9 @@ global.Bird = {
         return true;
     },
     isAdmin: function (message) {
-        return message.member.roles.cache.find(r => r.id === "954092482243727391")
+        let ownerRole = message.guild.roles.find("name", "Owner");
+        let adminRole = message.guild.roles.find("name", "Admin");
+        return message.member.roles.has(ownerRole) || message.member.roles.has(adminRole)
     },
     craftAuthHeader: function (username, password) {
         const str = `${username}:${password}`

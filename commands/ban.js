@@ -9,7 +9,7 @@ module.exports = {
         .addStringOption(option => option.setName('reason').setDescription('Reason for the ban').setRequired(true)),
     async execute(interaction) {
         if(!Bird.isAdmin(interaction)) {
-            interaction.reply("You do not have the correct permissions for this command")
+            return interaction.reply("You do not have the correct permissions for this command")
         }
         const id = interaction.options.getString(`userid`) || null;
         const reason = interaction.options.getString(`reason`) || null;
